@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#0D9488</color>
+    <color name="colorPrimaryDark">#0C0A09</color>
+    <color name="colorAccent">#34D399</color>
+
+    <!-- Matches the web app's stone-950 background so there is no flash of a
+         different colour between the splash screen and the first paint. -->
+    <color name="brandBackground">#0C0A09</color>
+    <color name="brandSystemBar">#0C0A09</color>
+    <color name="ic_launcher_background">#0D9488</color>
+    <color name="brandLogo">#0D9488</color>
+</resources>

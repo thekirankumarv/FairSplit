@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="FairSplit">
+  <defs>
+    <mask id="upper">
+      <rect width="1024" height="1024" fill="#000"/>
+      <rect x="-512" y="-512" width="2048" height="1024" fill="#fff" transform="rotate(-35 512 512)"/>
+    </mask>
+    <mask id="lower">
+      <rect width="1024" height="1024" fill="#000"/>
+      <rect x="-512" y="512" width="2048" height="1024" fill="#fff" transform="rotate(-35 512 512)"/>
+    </mask>
+  </defs>
+  <g fill="currentColor">
+    <circle cx="512" cy="512" r="286" mask="url(#upper)" transform="translate(-22 -31)"/>
+    <circle cx="512" cy="512" r="286" mask="url(#lower)" transform="translate(22 31)"/>
+  </g>
+</svg>
