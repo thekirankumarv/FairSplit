@@ -272,7 +272,8 @@ export function clearAllData(): void {
 }
 
 /**
- * Initial authentic seed data based on the Section 54 Goa Weekend 6-friends reference scenario.
+ * The example trip the app starts with, so a new install has something to
+ * look at. It is flagged as sample data and can be deleted like any other trip.
  */
 export function getInitialSeedData(): AppState {
   const members: Member[] = [
@@ -377,6 +378,7 @@ export function getInitialSeedData(): AppState {
     id: 'trip-goa-2026',
     name: 'Goa Weekend',
     description: '3-day coastal road trip with the gang',
+    isSample: true,
     startDate: '2026-09-20',
     endDate: '2026-09-22',
     currency: 'INR',

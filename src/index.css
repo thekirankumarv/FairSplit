@@ -15,6 +15,11 @@
 }
 
 :root {
+  /* Tells the platform to draw date pickers, select dropdowns and other
+     native controls dark. Without it they render with black text that is
+     invisible against the app's dark fields. */
+  color-scheme: dark;
+
   /* System bar insets. Resolve to 0 on platforms without cutouts, which keeps
      the same markup correct on desktop, in a browser and inside the APK. */
   --inset-top: env(safe-area-inset-top, 0px);

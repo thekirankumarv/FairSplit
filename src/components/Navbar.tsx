@@ -1,7 +1,8 @@
 import React from 'react';
-import { ChevronDown, ShieldCheck, Plus, BadgeCheck, Settings } from 'lucide-react';
+import { ChevronDown, ShieldCheck, Plus, BadgeCheck, Settings, Trash2 } from 'lucide-react';
 import { Trip } from '../types';
 import { Logo } from './Logo';
+import { SampleBadge } from './SampleBadge';
 
 interface NavbarProps {
   allTrips: Trip[];
@@ -11,6 +12,8 @@ interface NavbarProps {
   onOpenAddExpense?: () => void;
   onOpenDiagnostics: () => void;
   onOpenSettings: () => void;
+  /** Asks the app to confirm and then delete this trip. */
+  onDeleteTrip: (trip: Trip) => void;
   /** Highlights the settings button while the settings tab is open. */
   isSettingsActive?: boolean;
 }
@@ -22,6 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenCreateTrip,
   onOpenDiagnostics,
   onOpenSettings,
+  onDeleteTrip,
   isSettingsActive = false,
 }) => {
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
@@ -63,28 +67,51 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                   <div className="max-h-56 overflow-y-auto py-1">
                     {allTrips.map((t) => (
-                      <button
+                      <div
                         key={t.id}
-                        onClick={() => {
-                          onSelectTrip(t.id);
-                          setDropdownOpen(false);
-                        }}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-left transition-colors ${
+                        className={`flex items-center gap-1 rounded-xl transition-colors ${
                           t.id === activeTrip?.id
-                            ? 'bg-emerald-500/20 text-emerald-300 font-bold'
+                            ? 'bg-emerald-500/20 text-emerald-300'
                             : 'text-stone-200 hover:bg-stone-700/60'
                         }`}
                       >
-                        <div className="truncate">
-                          <div>{t.name}</div>
-                          <div className="text-[10px] text-stone-400 font-normal">
-                            {t.members.length} members • {t.expenses.length} expenses
+                        <button
+                          onClick={() => {
+                            onSelectTrip(t.id);
+                            setDropdownOpen(false);
+                          }}
+                          className="flex-1 min-w-0 flex items-center justify-between px-3 py-2 text-xs font-medium text-left"
+                        >
+                          <div className="truncate">
+                            <div
+                              className={`flex items-center gap-1.5 ${
+                                t.id === activeTrip?.id ? 'font-bold' : ''
+                              }`}
+                            >
+                              <span className="truncate">{t.name}</span>
+                              {t.isSample && <SampleBadge />}
+                            </div>
+                            <div className="text-[10px] text-stone-400 font-normal">
+                              {t.members.length} members • {t.expenses.length} expenses
+                            </div>
                           </div>
-                        </div>
-                        {t.id === activeTrip?.id && (
-                          <div className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
-                        )}
-                      </button>
+                          {t.id === activeTrip?.id && (
+                            <div className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0 ml-2" />
+                          )}
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setDropdownOpen(false);
+                            onDeleteTrip(t);
+                          }}
+                          className="p-2 mr-1 rounded-lg text-stone-400 hover:text-rose-400 hover:bg-stone-900/60 transition-colors shrink-0"
+                          title={`Delete ${t.name}`}
+                          aria-label={`Delete ${t.name}`}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                     ))}
                   </div>
 

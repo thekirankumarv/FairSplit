@@ -10,6 +10,7 @@ import {
   Check,
 } from 'lucide-react';
 import { Trip, TripFinancialSummary, AppSettings, ExpenseCategory } from '../types';
+import { saveTextFile, describeError } from '../utils/fileExport';
 import { formatPaise } from '../engine/precision';
 import { exportTrip, validateAndImportTrip } from '../storage/tripStorage';
 import { CategoryIcon } from './CategoryIcon';
@@ -54,23 +55,19 @@ export const SummaryTab: React.FC<SummaryTabProps> = ({
     .sort((a, b) => b[1] - a[1]);
 
   // Export as JSON file
-  const handleExportJSON = () => {
-    const jsonStr = exportTrip(trip);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+  const handleExportJSON = async () => {
     const safeName = trip.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
-    link.href = url;
-    link.download = `${safeName}-${new Date().getFullYear()}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    onShowToast(`Exported "${trip.name}" JSON file`, 'success');
+    const fileName = `${safeName}-${new Date().getFullYear()}.json`;
+    try {
+      const { location } = await saveTextFile(fileName, exportTrip(trip), 'application/json');
+      onShowToast(`Saved to ${location}`, 'success');
+    } catch (error) {
+      onShowToast(`Could not save ${fileName}. ${describeError(error)}`, 'error');
+    }
   };
 
   // Export as CSV
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     const headers = ['Date', 'Title', 'Category', 'Total Amount', 'Paid By', 'Participants', 'Split Method', 'Notes'];
     const rows = trip.expenses.map((e) => {
       const payers = e.payers
@@ -97,16 +94,13 @@ export const SummaryTab: React.FC<SummaryTabProps> = ({
     });
 
     const csvContent = [headers.join(','), ...rows].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${trip.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-ledger.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    onShowToast('CSV spreadsheet exported successfully', 'success');
+    const fileName = `${trip.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-ledger.csv`;
+    try {
+      const { location } = await saveTextFile(fileName, csvContent, 'text/csv');
+      onShowToast(`Saved to ${location}`, 'success');
+    } catch (error) {
+      onShowToast(`Could not save ${fileName}. ${describeError(error)}`, 'error');
+    }
   };
 
   // Copy text summary to clipboard

@@ -32,6 +32,7 @@ import { RecordPaymentModal } from './components/RecordPaymentModal';
 import { CreateTripModal } from './components/CreateTripModal';
 import { AddMemberModal } from './components/AddMemberModal';
 import { DiagnosticsModal } from './components/DiagnosticsModal';
+import { ConfirmDialog } from './components/ConfirmDialog';
 
 export default function App() {
   // 1. Core State
@@ -69,6 +70,7 @@ export default function App() {
   const [isCreateTripOpen, setIsCreateTripOpen] = useState(false);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState(false);
+  const [tripPendingDelete, setTripPendingDelete] = useState<Trip | null>(null);
 
   // Helper to show toasts
   const showToast = (
@@ -288,6 +290,21 @@ export default function App() {
     });
   };
 
+  const handleRenameMember = (memberId: string, name: string) => {
+    if (!activeTrip) return;
+
+    const updatedTrip: Trip = {
+      ...activeTrip,
+      members: activeTrip.members.map((m) => (m.id === memberId ? { ...m, name } : m)),
+      updatedAt: new Date().toISOString(),
+    };
+
+    updateState((prev) => ({
+      ...prev,
+      trips: prev.trips.map((t) => (t.id === updatedTrip.id ? updatedTrip : t)),
+    }));
+  };
+
   const handleAddMember = (newMember: Member) => {
     if (!activeTrip) return;
 
@@ -386,6 +403,7 @@ export default function App() {
         onOpenAddExpense={handleOpenAddExpense}
         onOpenDiagnostics={() => setIsDiagnosticsOpen(true)}
         onOpenSettings={() => setActiveTab('settings')}
+        onDeleteTrip={setTripPendingDelete}
         isSettingsActive={activeTab === 'settings'}
       />
 
@@ -442,6 +460,7 @@ export default function App() {
             onSelectTrip={handleSelectTrip}
             onOpenCreateTrip={() => setIsCreateTripOpen(true)}
             onDeleteTrip={handleDeleteTrip}
+            onRenameMember={handleRenameMember}
             onUpdateSettings={handleUpdateSettings}
             onRestoreBackup={handleRestoreBackup}
             onResetAllData={handleResetAllData}
@@ -511,6 +530,28 @@ export default function App() {
       <DiagnosticsModal
         isOpen={isDiagnosticsOpen}
         onClose={() => setIsDiagnosticsOpen(false)}
+      />
+
+      <ConfirmDialog
+        isOpen={tripPendingDelete !== null}
+        destructive
+        title="Delete trip"
+        message={
+          <>
+            <span className="font-semibold text-stone-100">{tripPendingDelete?.name}</span> and its{' '}
+            {tripPendingDelete?.expenses.length ?? 0} expenses will be removed from this device.
+            This cannot be undone.
+          </>
+        }
+        confirmLabel="Delete"
+        onConfirm={() => {
+          if (tripPendingDelete) {
+            handleDeleteTrip(tripPendingDelete.id);
+            showToast(`Deleted trip "${tripPendingDelete.name}"`, 'info');
+          }
+          setTripPendingDelete(null);
+        }}
+        onCancel={() => setTripPendingDelete(null)}
       />
 
       {/* Toast Notification Container */}

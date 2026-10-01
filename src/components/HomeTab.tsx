@@ -14,6 +14,7 @@ import { Trip, TripFinancialSummary, AppSettings, Expense } from '../types';
 import { formatPaise } from '../engine/precision';
 import { CategoryIcon } from './CategoryIcon';
 import { MemberAvatar } from './MemberAvatar';
+import { SampleBadge } from './SampleBadge';
 
 interface HomeTabProps {
   trip: Trip;
@@ -90,9 +91,12 @@ export const HomeTab: React.FC<HomeTabProps> = ({
               {trip.members.length} friends
             </span>
           </div>
-          <h1 className="text-2xl font-extrabold text-stone-100 tracking-tight mt-0.5">
-            {trip.name}
-          </h1>
+          <div className="flex items-center gap-2 mt-0.5 min-w-0">
+            <h1 className="text-2xl font-extrabold text-stone-100 tracking-tight truncate">
+              {trip.name}
+            </h1>
+            {trip.isSample && <SampleBadge className="shrink-0" />}
+          </div>
         </div>
       </div>
 

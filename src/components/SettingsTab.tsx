@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Download,
   Upload,
@@ -14,7 +14,10 @@ import {
 } from 'lucide-react';
 import { Trip, AppSettings, CurrencyCode, SUPPORTED_CURRENCIES } from '../types';
 import { exportAllData, validateBackup } from '../storage/tripStorage';
+import { saveTextFile, describeError } from '../utils/fileExport';
 import { MemberAvatar } from './MemberAvatar';
+import { ConfirmDialog } from './ConfirmDialog';
+import { SampleBadge } from './SampleBadge';
 
 interface SettingsTabProps {
   trips: Trip[];
@@ -23,6 +26,7 @@ interface SettingsTabProps {
   onSelectTrip: (tripId: string) => void;
   onOpenCreateTrip: () => void;
   onDeleteTrip: (tripId: string) => void;
+  onRenameMember: (memberId: string, name: string) => void;
   onUpdateSettings: (newSettings: Partial<AppSettings>) => void;
   onRestoreBackup: (state: unknown, mode: 'replace' | 'merge') => void;
   onResetAllData: () => void;
@@ -37,6 +41,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   onSelectTrip,
   onOpenCreateTrip,
   onDeleteTrip,
+  onRenameMember,
   onUpdateSettings,
   onRestoreBackup,
   onResetAllData,
@@ -44,26 +49,45 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
   onShowToast,
 }) => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [tripPendingDelete, setTripPendingDelete] = useState<Trip | null>(null);
+
+  const currentMember =
+    activeTrip?.members.find((m) => m.id === settings.currentUserId) ?? null;
+  const [nameDraft, setNameDraft] = useState(currentMember?.name ?? '');
+
+  // Follow the selection when the user switches persona or trip.
+  useEffect(() => {
+    setNameDraft(currentMember?.name ?? '');
+  }, [currentMember?.id, currentMember?.name]);
+
+  const trimmedName = nameDraft.trim();
+  const isNameDirty = Boolean(currentMember) && trimmedName !== '' && trimmedName !== currentMember?.name;
+
+  const commitName = () => {
+    if (!currentMember || !isNameDirty) {
+      setNameDraft(currentMember?.name ?? '');
+      return;
+    }
+    onRenameMember(currentMember.id, trimmedName);
+    onShowToast(`You are now shown as "${trimmedName}"`, 'success');
+  };
   const [pendingBackupState, setPendingBackupState] = useState<unknown | null>(null);
   const [showBackupModal, setShowBackupModal] = useState(false);
 
   // Export full backup
-  const handleExportAllBackup = () => {
+  const handleExportAllBackup = async () => {
     const jsonStr = exportAllData({
       activeTripId: activeTrip?.id || null,
       trips,
       settings,
     });
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `fairsplit-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    onShowToast('Complete device backup exported', 'success');
+    const fileName = `fairsplit-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    try {
+      const { location } = await saveTextFile(fileName, jsonStr, 'application/json');
+      onShowToast(`Backup saved to ${location}`, 'success');
+    } catch (error) {
+      onShowToast(`Could not save ${fileName}. ${describeError(error)}`, 'error');
+    }
   };
 
   // Import full backup file
@@ -108,7 +132,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
             </h2>
           </div>
           <p className="text-xs text-stone-400">
-            Select who is operating this device to calculate your personal balances accurately.
+            Pick who is holding this device, then set the name you want shown for yourself.
           </p>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -131,6 +155,45 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
               );
             })}
           </div>
+
+          {currentMember && (
+            <div className="pt-1 space-y-1.5">
+              <label
+                htmlFor="display-name-input"
+                className="block text-[11px] font-semibold text-stone-400"
+              >
+                Your display name
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="display-name-input"
+                  value={nameDraft}
+                  onChange={(e) => setNameDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      commitName();
+                    }
+                  }}
+                  onBlur={commitName}
+                  maxLength={40}
+                  placeholder="Enter your name"
+                  className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-stone-900 border border-stone-700 text-xs text-stone-100 placeholder:text-stone-500 focus:outline-none focus:border-emerald-500/60"
+                />
+                <button
+                  type="button"
+                  onClick={commitName}
+                  disabled={!isNameDirty}
+                  className="shrink-0 px-3 py-2 rounded-xl bg-emerald-500 text-stone-950 text-xs font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Save
+                </button>
+              </div>
+              <p className="text-[10px] text-stone-500">
+                This renames {currentMember.name} everywhere in this trip.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
@@ -203,7 +266,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                   className="cursor-pointer min-w-0 flex-1"
                 >
                   <div className="text-xs font-bold truncate flex items-center gap-1.5">
-                    <span>{t.name}</span>
+                    <span className="truncate">{t.name}</span>
+                    {t.isSample && <SampleBadge />}
                     {isActive && (
                       <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400 uppercase">
                         Active
@@ -215,20 +279,14 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                   </div>
                 </div>
 
-                {trips.length > 1 && (
-                  <button
-                    onClick={() => {
-                      if (window.confirm(`Delete "${t.name}" from this device?`)) {
-                        onDeleteTrip(t.id);
-                        onShowToast(`Deleted trip "${t.name}"`, 'info');
-                      }
-                    }}
-                    className="p-1.5 rounded-lg text-stone-500 hover:text-rose-400 hover:bg-stone-800 transition-colors ml-2"
-                    title="Delete trip"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                )}
+                <button
+                  onClick={() => setTripPendingDelete(t)}
+                  className="p-1.5 rounded-lg text-stone-500 hover:text-rose-400 hover:bg-stone-800 transition-colors ml-2 shrink-0"
+                  title={`Delete ${t.name}`}
+                  aria-label={`Delete ${t.name}`}
+                >
+                  <Trash2 size={14} />
+                </button>
               </div>
             );
           })}
@@ -334,6 +392,28 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={tripPendingDelete !== null}
+        destructive
+        title="Delete trip"
+        message={
+          <>
+            <span className="font-semibold text-stone-100">{tripPendingDelete?.name}</span> and its{' '}
+            {tripPendingDelete?.expenses.length ?? 0} expenses will be removed from this device.
+            This cannot be undone.
+          </>
+        }
+        confirmLabel="Delete"
+        onConfirm={() => {
+          if (tripPendingDelete) {
+            onDeleteTrip(tripPendingDelete.id);
+            onShowToast(`Deleted trip "${tripPendingDelete.name}"`, 'info');
+          }
+          setTripPendingDelete(null);
+        }}
+        onCancel={() => setTripPendingDelete(null)}
+      />
 
       {/* Backup Import Confirmation Modal (Replace vs Merge vs Cancel) */}
       {Boolean(showBackupModal && pendingBackupState) && (

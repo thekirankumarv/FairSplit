@@ -116,6 +116,8 @@ export interface Trip {
   settlements: SettlementPayment[];
   createdAt: string;
   updatedAt: string;
+  /** Set on the example trip shipped with the app, so it can be labelled. */
+  isSample?: boolean;
 }
 
 export interface AppSettings {

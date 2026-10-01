@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   X,
   Edit2,
@@ -10,6 +10,7 @@ import {
   Receipt,
   FileText,
 } from 'lucide-react';
+import { ConfirmDialog } from './ConfirmDialog';
 import { Trip, Expense } from '../types';
 import { formatPaise } from '../engine/precision';
 import {
@@ -40,6 +41,8 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
   onDuplicate,
   onDelete,
 }) => {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
   if (!isOpen || !expense) return null;
 
   const payerContributions = calculateExpensePayerContributions(expense);
@@ -231,12 +234,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
           </button>
 
           <button
-            onClick={() => {
-              if (window.confirm(`Delete "${expense.title}"?`)) {
-                onDelete(expense.id);
-                onClose();
-              }
-            }}
+            onClick={() => setConfirmDelete(true)}
             className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-xs font-bold text-rose-300 transition-colors"
           >
             <Trash2 size={14} />
@@ -244,6 +242,25 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
           </button>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDelete}
+        destructive
+        title="Delete expense"
+        message={
+          <>
+            <span className="font-semibold text-stone-100">{expense.title}</span> will be removed
+            from this trip and every balance recalculated.
+          </>
+        }
+        confirmLabel="Delete"
+        onConfirm={() => {
+          setConfirmDelete(false);
+          onDelete(expense.id);
+          onClose();
+        }}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </div>
   );
 };
