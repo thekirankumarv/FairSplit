@@ -116,10 +116,6 @@ android/         Capacitor Android project
 
 The engine is deliberately separate from the UI. It takes a trip and returns numbers, with no React, no storage and no side effects, which is what makes the invariant tests meaningful.
 
-## Handling system bars
-
-The app draws edge to edge, and every screen edge is padded using the safe area insets the platform reports. Those insets are read once in `src/index.css` and applied through a small set of utility classes, so the top bar clears the status bar and the bottom bar clears the gesture pill on any device. On Android versions that still allow it, the native theme also insets the web view, which covers the same ground from the other side.
-
 ## Tech stack
 
 React 19, TypeScript, Vite, Tailwind CSS 4, Capacitor 7, Lucide icons. Plus Jakarta Sans and JetBrains Mono are bundled rather than fetched, so typography is correct with no network.
