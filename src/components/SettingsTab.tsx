@@ -279,14 +279,23 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setTripPendingDelete(t)}
-                  className="p-1.5 rounded-lg text-stone-500 hover:text-rose-400 hover:bg-stone-800 transition-colors ml-2 shrink-0"
-                  title={`Delete ${t.name}`}
-                  aria-label={`Delete ${t.name}`}
-                >
-                  <Trash2 size={14} />
-                </button>
+                {t.isSample ? (
+                  <span
+                    className="text-[9px] text-stone-500 ml-2 shrink-0"
+                    title="The example trip cannot be deleted"
+                  >
+                    Kept
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => setTripPendingDelete(t)}
+                    className="p-1.5 rounded-lg text-stone-500 hover:text-rose-400 hover:bg-stone-800 transition-colors ml-2 shrink-0"
+                    title={`Delete ${t.name}`}
+                    aria-label={`Delete ${t.name}`}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </div>
             );
           })}

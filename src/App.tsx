@@ -24,6 +24,7 @@ import { BalancesTab } from './components/BalancesTab';
 import { SummaryTab } from './components/SummaryTab';
 import { SettingsTab } from './components/SettingsTab';
 import { Toast, ToastState } from './components/Toast';
+import { Logo } from './components/Logo';
 
 // Modals
 import { ExpenseModal } from './components/ExpenseModal';
@@ -283,6 +284,9 @@ export default function App() {
 
   const handleDeleteTrip = (tripId: string) => {
     updateState((prev) => {
+      // Keeping the example trip guarantees there is always one to open.
+      if (prev.trips.find((t) => t.id === tripId)?.isSample) return prev;
+
       const trips = prev.trips.filter((t) => t.id !== tripId);
       const activeTripId =
         prev.activeTripId === tripId ? (trips[0] ? trips[0].id : null) : prev.activeTripId;
@@ -375,19 +379,42 @@ export default function App() {
     setActiveTab('home');
   };
 
+  // This branch returns early, so it has to render the create dialog itself.
+  // Without it the button below sets state that nothing is listening to.
   if (!activeTrip || !financials) {
     return (
-      <div className="min-h-screen bg-stone-950 text-stone-100 flex items-center justify-center p-4">
-        <div className="text-center space-y-3">
-          <h1 className="text-xl font-bold">No Trips Found</h1>
-          <p className="text-xs text-stone-400">Create a new short trip to get started.</p>
+      <div className="min-h-screen bg-stone-950 text-stone-100 flex items-center justify-center pad-overlay">
+        <div className="text-center space-y-4 max-w-xs">
+          <Logo size={56} className="mx-auto" />
+          <div className="space-y-1.5">
+            <h1 className="text-lg font-bold">No trips yet</h1>
+            <p className="text-xs text-stone-400">
+              Create a trip to start splitting expenses with your group.
+            </p>
+          </div>
           <button
             onClick={() => setIsCreateTripOpen(true)}
-            className="px-4 py-2 rounded-xl bg-emerald-500 text-stone-950 font-bold text-xs"
+            className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-bold text-xs transition-colors"
           >
-            Create Trip
+            Create your first trip
           </button>
         </div>
+
+        <CreateTripModal
+          isOpen={isCreateTripOpen}
+          onClose={() => setIsCreateTripOpen(false)}
+          onCreateTrip={handleCreateTrip}
+        />
+
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            actionLabel={toast.actionLabel}
+            onAction={toast.onAction}
+            onClose={() => setToast(null)}
+          />
+        )}
       </div>
     );
   }

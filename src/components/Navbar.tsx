@@ -100,17 +100,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                           )}
                         </button>
 
-                        <button
-                          onClick={() => {
-                            setDropdownOpen(false);
-                            onDeleteTrip(t);
-                          }}
-                          className="p-2 mr-1 rounded-lg text-stone-400 hover:text-rose-400 hover:bg-stone-900/60 transition-colors shrink-0"
-                          title={`Delete ${t.name}`}
-                          aria-label={`Delete ${t.name}`}
-                        >
-                          <Trash2 size={13} />
-                        </button>
+                        {/* The example trip stays put, so there is always
+                            something to open. */}
+                        {!t.isSample && (
+                          <button
+                            onClick={() => {
+                              setDropdownOpen(false);
+                              onDeleteTrip(t);
+                            }}
+                            className="p-2 mr-1 rounded-lg text-stone-400 hover:text-rose-400 hover:bg-stone-900/60 transition-colors shrink-0"
+                            title={`Delete ${t.name}`}
+                            aria-label={`Delete ${t.name}`}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
