@@ -10,4 +10,7 @@
     <color name="brandSystemBar">#0C0A09</color>
     <color name="ic_launcher_background">#0D9488</color>
     <color name="brandLogo">#0D9488</color>
+    <color name="dialogSurface">#1C1917</color>
+    <color name="dialogTextPrimary">#F5F5F4</color>
+    <color name="dialogTextSecondary">#A8A29E</color>
 </resources>
